@@ -2,7 +2,7 @@
 
 ### Description
 
-Family Care adalah aplikasi yang dikembangkan Yayasan Lembaga SABDA. Aplikasi ini dirancang untuk mendukung keluarga rohani Kristen di Indonesia.
+Family Care adalah aplikasi yang dikembangkan ELAN. Aplikasi ini dirancang untuk mendukung keluarga rohani Kristen di Indonesia.
 
 ### Fitur
 
