@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/chat"
+        android:title="@string/chat"
+        android:icon="@drawable/baseline_chat_24"/>
+
+    <item
+        android:id="@+id/materi"
+        android:title="@string/resources"
+        android:icon="@drawable/baseline_storage_24"/>
+
+    <item
+        android:id="@+id/renungan"
+        android:title="@string/renungan"
+        android:icon="@drawable/baseline_menu_book_24"/>
+
+</menu>

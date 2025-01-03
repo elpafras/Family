@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">Family Care</string>
+    <string name="dhb">drawerHistoryButton</string>
+    <string name="test">test</string>
+    <string name="berjalan_bersama_kristus">Berjalan Bersama Kristus</string>
+    <string name="renungan">Renungan</string>
+    <string name="chat">Chat</string>
+    <string name="resources">Resources</string>
+    <string name="about"><b>Family Care</b> adalah sebuah aplikasi yang <b>dikembangkan oleh Yayasan Lembaga SABDA, yang hadir sebagai bagian integral dari ekosistem situs</b> family.sabda.org.\n\nAplikasi ini dirancang untuk mendukung kehidupan rohani keluarga Kristen di Indonesia, dengan menyediakan berbagai bahan berkualitas yang akan memperkaya kehidupan iman dan hubungan antar anggota keluarga dalam konteks kekristenan. Dengan tujuan untuk memperlengkapi Tubuh Kristus di Indonesia, Family Care hadir dengan tiga fitur unggulan yang dapat dimanfaatkan oleh setiap keluarga Kristen: resources, renungan, dan chatbot yang berbasis Alkitab.\n\n<b>1. Resources</b>\n<b>Fitur pertama</b> yang disediakan oleh Family Care adalah <b>resources atau sumber bahan berkualitas.</b> Aplikasi ini menyediakan berbagai artikel untuk membantu keluarga Kristen dalam menghadapi tantangan hidup sehari-hari dengan perspektif iman. Artikel-artikel yang ada mencakup topik-topik penting seperti kehidupan pernikahan, pendidikan anak, komunikasi dalam keluarga, hingga membangun iman keluarga dalam dunia yang semakin berkembang. Semua bahan yang disediakan sangat relevan dengan konteks kehidupan kekristenan di Indonesia.\n\n<b>2. Renungan</b>\n<b>Fitur kedua</b> yang sangat penting dalam aplikasi Family Care adalah fitur <b>renungan.</b> Renungan-renungan yang disediakan dalam aplikasi ini dirancang khusus untuk membangun kehidupan rohani keluarga. Setiap renungan disusun dengan dasar Firman Tuhan, memberikan pengajaran yang mendalam, dan relevan dengan kebutuhan kehidupan keluarga masa kini. Renungan ini tidak hanya memperdalam pemahaman Alkitab, tetapi juga mendorong setiap keluarga untuk mempraktikkan ajaran-ajaran Alkitab dalam kehidupan sehari-hari\n\n<b>3. Chatbot Alkitabiah</b>\n<b>Fitur unggulan ketiga</b> dari aplikasi Family Care adalah <b>chatbot yang telah dilatih dengan bahan-bahan Alkitab.</b> Chatbot ini dirancang untuk memberikan respons yang alkitabiah dalam setiap percakapan atau pertanyaan yang diajukan oleh pengguna. Dengan teknologi kecerdasan buatan yang dikombinasikan dengan pengetahuan Alkitab, chatbot ini dapat membantu keluarga Kristen dalam mencari jawaban atau panduan atas masalah kehidupan yang mereka hadapi berdasarkan ajaran Alkitab.\n\nDengan ketiga fitur utama ini — <b>resources, renungan, dan chatbot</b> — <b>aplikasi Family Care hadir untuk menjadi mitra yang setia bagi keluarga Kristen di Indonesia dalam perjalanan iman mereka.</b> Aplikasi ini mempermudah setiap keluarga untuk memperoleh bahan rohani yang berkualitas, mendalami Firman Tuhan melalui renungan yang inspiratif, serta mendapatkan jawaban atas pertanyaan hidup mereka melalui chatbot yang berbasis Alkitab.</string>
+    <string name="about2">About</string>
+    <string name="footer">DOSA AKAN MENAMBAH MASALAH, MENGHABISKAN ENERGI,\n DAN MELIPATGANDAKAN KESULITAN ANDA</string>
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="fragment_chat">Family Care - Chat</string>
+    <string name="fragment_resources">Family Care - Resources</string>
+    <string name="fragment_renungan">Family Care - Renungan</string>
+    <string name="loading">Loading.</string>
+
+</resources>

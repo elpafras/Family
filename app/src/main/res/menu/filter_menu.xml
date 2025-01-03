@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/category"
+        android:title="Kategori"/>
+
+    <item
+        android:id="@+id/series"
+        android:title="Series"/>
+
+    <item
+        android:id="@+id/media"
+        android:title="Tipe Media"/>
+
+</menu>

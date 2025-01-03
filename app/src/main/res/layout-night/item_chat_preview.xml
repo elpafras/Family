@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="16dp"
+    android:background="?android:attr/selectableItemBackground">
+
+    <TextView
+        android:id="@+id/textViewChatPreview"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Chat Preview itu seperti ini ya ges ya? its true brother"
+        android:textColor="@color/white"
+        android:textStyle="bold"
+        android:textSize="16sp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:paddingEnd="8dp"
+        android:layout_marginBottom="10dp"
+        android:layout_gravity="center_horizontal"
+        android:singleLine="true"/>
+
+    <View
+        android:id="@+id/lineView"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"
+        android:layout_below="@id/titleTextView"
+        android:background="@color/white_dark_tc"
+        android:layout_marginHorizontal="10dp"
+        android:layout_marginVertical="4dp"/>
+
+</LinearLayout>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+    <color name="blue">#0F3077</color>
+    <color name="gray">#A5A6A6</color>
+
+    <color name="gray_dark_background">#121212</color>
+    <color name="gray_dark_toolbar">#1F1F1F</color>
+    <color name="gray_dark_button">#2B2D30</color>
+    <color name="white_dark_tc">#D3D3D3</color>
+
+
+</resources>
