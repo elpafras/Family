@@ -20,10 +20,7 @@ class ChatAdapter(private val messageData: List<MessageData> ) :
         return if (messageData[position].isSent) TYPE_SENT else TYPE_RECEIVED
     }
 
-    override fun onCreateViewHolder(
-        parent: ViewGroup,
-        viewType: Int
-    ): RecyclerView.ViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return if (viewType == TYPE_SENT) {
             val view = LayoutInflater.from(parent.context)
                 .inflate(R.layout.item_send, parent, false)
@@ -35,10 +32,7 @@ class ChatAdapter(private val messageData: List<MessageData> ) :
         }
     }
 
-    override fun onBindViewHolder(
-        holder: RecyclerView.ViewHolder,
-        position: Int
-    ) {
+    override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
         val message = messageData[position]
         if (holder is SentViewHolder) {
             holder.textViewMessage.text = message.text
@@ -47,9 +41,7 @@ class ChatAdapter(private val messageData: List<MessageData> ) :
         }
     }
 
-    override fun getItemCount(): Int {
-        return messageData.size
-    }
+    override fun getItemCount(): Int = messageData.size
 
 
     class SentViewHolder(view: View) : RecyclerView.ViewHolder(view) {

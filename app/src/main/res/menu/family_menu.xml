@@ -2,9 +2,14 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
     <item
-        android:id="@+id/chat"
-        android:title="@string/chat"
-        android:icon="@drawable/baseline_chat_24"/>
+        android:id="@+id/home"
+        android:title="@string/home"
+        android:icon="@drawable/baseline_home_24"/>
+
+    <item
+        android:id="@+id/renungan"
+        android:title="@string/renungan"
+        android:icon="@drawable/baseline_menu_book_24"/>
 
     <item
         android:id="@+id/materi"
@@ -12,8 +17,13 @@
         android:icon="@drawable/baseline_storage_24"/>
 
     <item
-        android:id="@+id/renungan"
-        android:title="@string/renungan"
-        android:icon="@drawable/baseline_menu_book_24"/>
+        android:id="@+id/chat"
+        android:title="@string/chat"
+        android:icon="@drawable/baseline_chat_24"/>
+
+    <item
+        android:id="@+id/dummy_menu_item"
+        android:title="@string/dummy"
+        android:visible="false"/>
 
 </menu>

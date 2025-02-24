@@ -17,7 +17,7 @@
                 android:id="@+id/titleRenungan"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Renungan Title"
+                android:text="@string/renungan_title"
                 android:textSize="20sp"
                 android:textStyle="bold"
                 android:textColor="@color/black"
@@ -37,6 +37,7 @@
                     android:id="@+id/prevButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:contentDescription="@string/previous_button"
                     android:src="@drawable/baseline_navigate_before_24"
                     android:backgroundTint="@color/blue"
                     android:layout_gravity="center_vertical"/>
@@ -45,13 +46,14 @@
                     android:id="@+id/tanggalButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="22 November 2024"
+                    android:text="@string/days_month_year"
                     android:backgroundTint="@color/blue"/>
 
                 <ImageButton
                     android:id="@+id/nextButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:contentDescription="@string/next_button"
                     android:src="@drawable/baseline_navigate_next_24"
                     android:backgroundTint="@color/blue"
                     android:layout_gravity="center_vertical"/>
@@ -71,7 +73,7 @@
                     android:id="@+id/verseButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Verse"
+                    android:text="@string/verse"
                     android:layout_marginTop="10dp"
                     android:layout_gravity="center_horizontal"
                     android:backgroundTint="@color/blue"/>
@@ -80,7 +82,7 @@
                     android:id="@+id/nats"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Aku mencela engkau"
+                    android:text="@string/nats_title"
                     android:textSize="20sp"
                     android:textColor="@color/black"
                     android:textStyle="bold"
@@ -94,7 +96,7 @@
                     android:id="@+id/natsButton"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="nats Verse"
+                    android:text="@string/nats_verse"
                     android:layout_marginBottom="10dp"
                     android:layout_gravity="center_horizontal"
                     android:backgroundTint="@color/blue"/>
@@ -106,10 +108,18 @@
                 android:id="@+id/content"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/about"
+                android:text="@string/lorem"
                 android:layout_below="@id/LinearLayoutAyat"
-                android:layout_marginHorizontal="20dp"
+                android:layout_marginHorizontal="15dp"
                 android:layout_marginVertical="20dp"/>
+
+            <TextView
+                android:id="@+id/sumber"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/sumber_renungan_harian"
+                android:layout_marginStart="20dp"
+                android:layout_below="@id/content"/>
 
             <LinearLayout
                 android:id="@+id/linearLayoutFooter"

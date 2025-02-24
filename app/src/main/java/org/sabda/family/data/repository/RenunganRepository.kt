@@ -1,29 +1,33 @@
 package org.sabda.family.data.repository
 
+import android.content.Context
 import android.util.Log
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import org.sabda.family.model.NatsData
 import org.sabda.family.model.RenunganData
 import org.sabda.family.model.VerseData
+import org.sabda.family.R
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
 
-class RenunganRepository {
+class RenunganRepository(private val context: Context) {
 
     private val gson: Gson = GsonBuilder().create()
 
     /* fetch and parse Renungan */
 
     fun fetchRenungan(): RenunganData? {
-        val url = URL("https://dev.sabda.org/unhack/2024/api/renungan/getRhFamily.php")
+        val urlString = context.getString(R.string.renungan_url)
+        val url = URL(urlString)
         return fetchDataFromUrl(url)
     }
 
     fun fetchRenunganByDate(date: String): RenunganData? {
-        val url = URL("https://dev.sabda.org/unhack/2024/api/renungan/getRhFamily.php?date=$date")
+        val urlString = context.getString(R.string.renungan_by_date_url, date)
+        val url = URL(urlString)
         return fetchDataFromUrl(url)
     }
 
@@ -41,15 +45,9 @@ class RenunganRepository {
         }
     }
 
-    private fun parseJson(jsonResponse: String): RenunganData? {
-        return gson.fromJson(jsonResponse, RenunganData::class.java)
-    }
-
-    /* fetch and parse verse & nats */
-
     fun fetchVerseTexts(ayat: String): Map<String, String>?{
-        val apiUrl = "https://gpt.sabda.org/api/bible/getData.php?t=/ayat%20$ayat%20tb"
-        val url = URL(apiUrl)
+        val urlString = "https://gpt.sabda.org/api/bible/getData.php?t=/ayat%20$ayat%20tb"
+        val url = URL(urlString)
 
         Log.d("cek url", "fetchVerseTexts: $url")
 
@@ -65,6 +63,34 @@ class RenunganRepository {
 
             parseFullVerseTexts(response)
         } else {
+            null
+        }
+    }
+
+    fun fetchAllNatsTexts(ayat: String): Map<String, String>? {
+        val apiURL = "https://gpt.sabda.org/api/bible/getData.php?t=$ayat%20tb,ayt,kjv,net,jawa"
+        val url = URL(apiURL)
+
+        Log.d("cekurl", "fetchAllNatsTexts: $apiURL")
+
+        val connection: HttpURLConnection = url.openConnection() as HttpURLConnection
+        connection.requestMethod = "GET"
+
+        val responseCode = connection.responseCode
+        return if (responseCode == HttpURLConnection.HTTP_OK) {
+            val reader = BufferedReader(InputStreamReader(connection.inputStream))
+            val response = reader.use { it.readText() }
+            parseAllAyatTexts(response)
+        } else {
+            null
+        }
+    }
+
+    private fun parseJson(jsonResponse: String): RenunganData? {
+        return try {
+            gson.fromJson(jsonResponse, RenunganData::class.java)
+        } catch (e: Exception) {
+            Log.e("RenunganRepository", "Error parsing JSON: ${e.message}")
             null
         }
     }
@@ -89,25 +115,6 @@ class RenunganRepository {
         Log.d("test textmap", "parseFullVerseTexts: $textMap")
 
         return textMap.ifEmpty { null }
-    }
-
-    fun fetchAllNatsTexts(ayat: String): Map<String, String>? {
-        val apiURL = "https://gpt.sabda.org/api/bible/getData.php?t=$ayat%20tb,ayt,kjv,net,jawa"
-        val url = URL(apiURL)
-
-        Log.d("cekurl", "fetchAllNatsTexts: $apiURL")
-
-        val connection: HttpURLConnection = url.openConnection() as HttpURLConnection
-        connection.requestMethod = "GET"
-
-        val responseCode = connection.responseCode
-        return if (responseCode == HttpURLConnection.HTTP_OK) {
-            val reader = BufferedReader(InputStreamReader(connection.inputStream))
-            val response = reader.use { it.readText() }
-            parseAllAyatTexts(response)
-        } else {
-            null
-        }
     }
 
     private fun parseAllAyatTexts(jsonResponse: String): Map<String, String>? {

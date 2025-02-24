@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".fragment.HomeFragment">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+            <ImageView
+                android:id="@+id/logoImageView"
+                android:layout_width="100dp"
+                android:layout_height="100dp"
+                android:src="@drawable/family_circle_logo"
+                android:contentDescription="@string/app_name"
+                android:layout_centerHorizontal="true"
+                android:layout_marginVertical="10dp"/>
+
+            <TextView
+                android:id="@+id/textViewDescription"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/description"
+                android:textColor="@color/black"
+                android:textAlignment="center"
+                android:textSize="15sp"
+                android:layout_marginVertical="5dp"
+                android:layout_centerHorizontal="true"
+                android:layout_below="@id/logoImageView"/>
+
+            <RelativeLayout
+                android:id="@+id/relativeLayoutRenungan"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="#BDBCBC"
+                android:layout_below="@id/textViewDescription"
+                android:layout_marginVertical="10dp">
+
+                <TextView
+                    android:id="@+id/homeRenunganTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/renungan_title"
+                    android:textColor="@color/black"
+                    android:textStyle="bold"
+                    android:textSize="20sp"
+                    android:layout_centerHorizontal="true"
+                    android:layout_marginVertical="10dp"/>
+
+                <TextView
+                    android:id="@+id/homeNatsVerse"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/nats_verse"
+                    android:textColor="@color/black"
+                    android:textSize="15sp"
+                    android:layout_below="@id/homeRenunganTitle"
+                    android:layout_centerHorizontal="true"
+                    android:layout_marginVertical="10dp"
+                    android:layout_marginHorizontal="40dp"/>
+
+                <TextView
+                    android:id="@+id/natsVerseNumber"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/nats_verse"
+                    android:textColor="@color/blue"
+                    android:textSize="15sp"
+                    android:layout_below="@id/homeNatsVerse"
+                    android:layout_centerHorizontal="true"/>
+
+
+                <Button
+                    android:id="@+id/buttonRenungan"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@id/natsVerseNumber"
+                    android:text="Baca Renungan hari ini..."
+                    android:textColor="@color/white"
+                    android:layout_centerHorizontal="true"
+                    android:backgroundTint="@color/blue"
+                    android:layout_marginVertical="10dp"/>
+
+            </RelativeLayout>
+
+            <TextView
+                android:id="@+id/resourcesTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Resources"
+                android:textColor="@color/black"
+                android:textStyle="bold"
+                android:textSize="20sp"
+                android:layout_centerHorizontal="true"
+                android:layout_marginVertical="10dp"
+                android:layout_below="@id/relativeLayoutRenungan"/>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/horizontalRecyclerView"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clipToPadding="false"
+                android:padding="16dp"
+                tools:listitem="@layout/family_recycler"
+                android:layout_below="@id/resourcesTextView"/>
+
+        </RelativeLayout>
+
+    </ScrollView>
+
+</FrameLayout>

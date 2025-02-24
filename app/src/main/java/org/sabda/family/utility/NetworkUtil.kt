@@ -17,13 +17,13 @@ object NetworkUtil {
 
     fun showNoInternetDialog(context: Context) {
         AlertDialog.Builder(context)
-            .setTitle("Koneksi Internet")
-            .setMessage("Silakan sambungkan perangkat dengan internet")
+            .setTitle("Masalah Koneksi Internet")
+            .setMessage("Silakan sambungkan perangkat dengan internet untuk memulai aplikasi ini")
             .setCancelable(false)
             .setPositiveButton("OK") { dialog, _ ->
                 if (!isInternetAvailable(context)) {
                     if (context is Activity) {
-                        context.finish()
+                        context.finishAffinity()
                     }
                 } else {
                     dialog.dismiss()

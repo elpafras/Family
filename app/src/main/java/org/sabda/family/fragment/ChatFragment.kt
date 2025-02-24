@@ -3,24 +3,22 @@ package org.sabda.family.fragment
 import android.content.Context
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.fragment.app.Fragment
+import android.widget.Toast
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.sabda.family.MainActivity
 import org.sabda.family.adapter.ChatPreviewAdapter
+import org.sabda.family.base.BaseFragment
 import org.sabda.family.data.local.AppDatabase
 import org.sabda.family.data.local.MessageDao
 import org.sabda.family.databinding.FragmentChatBinding
 import org.sabda.family.model.MessageData
+import org.sabda.family.utility.NetworkUtil
 
-class ChatFragment : Fragment() {
+class ChatFragment : BaseFragment<FragmentChatBinding>() {
 
     interface ChatFragmentCallback {
         fun onLoadChatMessagesByChatId(chatId: Long)
@@ -28,9 +26,16 @@ class ChatFragment : Fragment() {
 
     private var callback: ChatFragmentCallback? = null
 
-    private lateinit var binding: FragmentChatBinding
     private lateinit var messageDao: MessageDao
     private val chatPreview: MutableList<MessageData> = mutableListOf()
+
+    override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
+        FragmentChatBinding.inflate(inflater, container, false)
+
+    override fun onBackPressed() {
+        // Misalnya tampilkan konfirmasi sebelum keluar dari aplikasi
+        Toast.makeText(requireContext(), "Tekan sekali lagi untuk keluar", Toast.LENGTH_SHORT).show()
+    }
 
     override fun onAttach(context: Context) {
         super.onAttach(context)
@@ -44,23 +49,18 @@ class ChatFragment : Fragment() {
         callback = null
     }
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        binding = FragmentChatBinding.inflate(inflater, container, false)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        if (!NetworkUtil.isInternetAvailable(requireContext())) {
+            NetworkUtil.showNoInternetDialog(requireContext())
+            return
+        }
 
         messageDao = AppDatabase.getDatabase(requireContext()).messageDao()
-
         setupRecyclerView()
-        setupButtons()
         loadChatPreviews()
 
-        return binding.root
-    }
-
-    private fun setupButtons() {
-        binding.floatingChatButton.setOnClickListener { startActivity(Intent(context, MainActivity::class.java)) }
     }
 
     private fun setupRecyclerView() {
@@ -73,11 +73,7 @@ class ChatFragment : Fragment() {
     }
 
     private fun loadChatPreviews() {
-        lifecycleScope.launch {
-            val previews = withContext(Dispatchers.IO) {
-                messageDao.getAllMessages()
-            }
-
+        messageDao.getAllMessages().observe(viewLifecycleOwner) { previews ->
             val existingPreviews = mutableSetOf<Pair<Long, Int>>()
 
             val previewList = previews.groupBy { it.chatId }.mapNotNull {
@@ -85,14 +81,10 @@ class ChatFragment : Fragment() {
                 val chatId = it.key
                 val counter = previewMessage.counter
 
-                Log.d("ChatFragment", "Loaded preview for chatId: $chatId with counter: $counter, text: ${previewMessage.text}")
-
                 if (existingPreviews.contains(Pair(chatId, counter))) {
-                    Log.d("ChatFragment", "Skipping duplicate preview for chatId: $chatId with counter: $counter")
                     return@mapNotNull null
                 } else {
                     existingPreviews.add(Pair(chatId, counter))
-                    Log.d("ChatFragment", "Adding preview for chatId: $chatId with counter: $counter, text: ${previewMessage.text}")
                     MessageData(
                         text = previewMessage.text,
                         isSent = previewMessage.isSent,
@@ -115,6 +107,4 @@ class ChatFragment : Fragment() {
 
         startActivity(intent)
     }
-
-
 }

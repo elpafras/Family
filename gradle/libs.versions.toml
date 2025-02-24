@@ -1,11 +1,11 @@
 [versions]
-activity = "1.9.3"
-agp = "8.8.0-rc02"
+activity = "1.10.0"
+agp = "8.10.0-alpha06"
 appcompat = "1.7.0"
 constraintlayout = "2.2.0"
 coreKtx = "1.15.0"
 espressoCore = "3.6.1"
-fragment = "1.8.5"
+fragment = "1.8.6"
 gson = "2.11.0"
 junit = "4.13.2"
 junitVersion = "1.2.1"
@@ -13,7 +13,10 @@ kotlin = "2.1.0"
 lifecycle = '2.8.7'
 material = "1.12.0"
 room = "2.6.1"
-uiAndroid = "1.7.6"
+uiAndroid = "1.7.8"
+retrofit = "2.11.0"
+moshi = "1.15.2"
+youtubePlayer = "12.1.1"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -36,7 +39,11 @@ androidx-room-runtime = { group = "androidx.room", name = "room-runtime", versio
 androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
 androidx-fragment-ktx = { group = "androidx.fragment", name = "fragment-ktx", version.ref = "fragment" }
-
+retrofit = { group = "com.squareup.retrofit2", name = "retrofit", version.ref = "retrofit" }
+retrofit-converter-moshi = { group = "com.squareup.retrofit2", name = "converter-moshi", version.ref = "retrofit" }
+moshi = { group = "com.squareup.moshi", name = "moshi", version.ref = "moshi" }
+moshi-kotlin = { group = "com.squareup.moshi", name = "moshi-kotlin", version.ref = "moshi" }
+youtube-player = { group = "com.pierfrancescosoffritti.androidyoutubeplayer", name = "core", version.ref = "youtubePlayer" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

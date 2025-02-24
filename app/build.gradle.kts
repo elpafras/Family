@@ -67,6 +67,13 @@ dependencies {
     implementation(libs.com.google.gson)
     implementation(libs.composeloading)
 
+    implementation(libs.retrofit)
+    implementation(libs.moshi)
+    implementation(libs.moshi.kotlin)
+    implementation(libs.retrofit.converter.moshi)
+
+    implementation(libs.youtube.player)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

@@ -1,5 +1,6 @@
 package org.sabda.family.data.local
 
+import androidx.lifecycle.LiveData
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.Query
@@ -17,7 +18,7 @@ interface MessageDao {
     suspend fun getMessageByChatId(chatId: Long): List<MessageData>
 
     @Query("SELECT * FROM messages")
-    suspend fun getAllMessages(): List<MessageData>
+    fun getAllMessages(): LiveData<List<MessageData>>
 
     @Query("DELETE FROM messages WHERE chatId = :chatId")
     suspend fun deleteMessagesByChatId(chatId: Long)

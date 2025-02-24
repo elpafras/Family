@@ -38,6 +38,17 @@
         android:layout_marginBottom="80dp"
         android:layout_below="@id/toolbar"/>
 
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/floatingChatButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/chat"
+        android:src="@drawable/ai_button"
+        android:backgroundTint="@color/white"
+        android:layout_above="@id/navBottom"
+        android:layout_alignParentEnd="true"
+        android:layout_margin="20dp"/>
+
     <com.google.android.material.bottomnavigation.BottomNavigationView
         android:id="@+id/navBottom"
         android:layout_width="match_parent"

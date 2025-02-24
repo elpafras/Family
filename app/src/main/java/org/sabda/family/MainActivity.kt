@@ -2,7 +2,7 @@ package org.sabda.family
 
 import android.os.Bundle
 import android.util.Log
-import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.edit
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -12,6 +12,7 @@ import kotlinx.coroutines.withContext
 import org.json.JSONObject
 import org.sabda.family.adapter.ChatAdapter
 import org.sabda.family.adapter.ChatPreviewAdapter
+import org.sabda.family.base.BaseActivity
 import org.sabda.family.data.local.AppDatabase
 import org.sabda.family.data.local.MessageDao
 import org.sabda.family.data.repository.ChatRepository
@@ -20,54 +21,70 @@ import org.sabda.family.fragment.ChatFragment
 import org.sabda.family.model.MessageData
 import org.sabda.family.utility.LoadingUtil
 import org.sabda.family.utility.MenuUtil
+import org.sabda.family.utility.NetworkUtil
 import org.sabda.family.utility.StatusBarUtil
 
-class MainActivity : AppCompatActivity(), ChatFragment.ChatFragmentCallback {
+class MainActivity : BaseActivity<ActivityMainBinding>(), ChatFragment.ChatFragmentCallback {
 
-    private lateinit var binding: ActivityMainBinding
+    override fun setupViewBinding(): ActivityMainBinding {
+        return ActivityMainBinding.inflate(layoutInflater)
+    }
+
     private lateinit var chatAdapter: ChatAdapter
     private lateinit var chatRepository: ChatRepository
     private lateinit var loadingUtil: LoadingUtil
     private lateinit var appDatabase: AppDatabase
     private lateinit var messageDao: MessageDao
+
     private val messageList: MutableList<MessageData> = mutableListOf()
     private val chatPreview: MutableList<MessageData> = mutableListOf()
-
     private var currentChatId = System.currentTimeMillis()
-    private var chatCounter  = 1
+    private var chatCounter = 1
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
 
-        appDatabase = AppDatabase.getDatabase(this)
-        messageDao = appDatabase.messageDao()
-
-        val chatId = intent.getLongExtra("CHAT_ID", -1)
-        if (chatId != -1L) {
-            loadChatMessagesByChatId(chatId)
+        if (!NetworkUtil.isInternetAvailable(this)) {
+            NetworkUtil.showNoInternetDialog(this)
+            return
         }
 
+        initDatabase()
         StatusBarUtil().setLightStatusBar(this, R.color.white)
+
         chatRepository = ChatRepository()
+        loadingUtil = LoadingUtil()
 
         setupButtons()
         setupRecyclerView()
         setupNavigationView()
 
-        loadingUtil = LoadingUtil()
+        currentChatId = getSharedPreferences("ChatPrefs", MODE_PRIVATE).getLong("currentChatId", currentChatId)
+        intent.getLongExtra("CHAT_ID", -1L).takeIf { it != -1L }?.let { chatId ->
+            currentChatId = chatId
+            saveCurrentChatId(chatId)
+        }
 
-        //startNewChat()
+        if (intent.getBooleanExtra("START_NEW_CHAT", false)) {
+            startNewChat()
+        }
+
         loadMessagesFromDatabase()
         loadChatPreviews()
     }
 
+    private fun initDatabase() {
+        appDatabase = AppDatabase.getDatabase(this)
+        messageDao = appDatabase.messageDao()
+    }
+
+
     private fun setupButtons() {
-        binding.btnSendMessage.setOnClickListener{
+        binding.btnSendMessage.setOnClickListener {
             Log.d("TAG", "setupButtons: clicked")
             val messageText = binding.editTextMessage.text.toString()
-            if (messageText.isNotEmpty()){
+            if (messageText.isNotEmpty()) {
                 sendMessage(messageText)
                 binding.editTextMessage.text.clear()
                 loadingUtil.showLoadingMessage(chatAdapter, messageList, currentChatId)
@@ -83,10 +100,8 @@ class MainActivity : AppCompatActivity(), ChatFragment.ChatFragmentCallback {
         }
 
         binding.btnHistory.setOnClickListener {
-            if (binding.drawerLayout.isDrawerOpen(binding.navView)){
-                binding.drawerLayout.closeDrawer(binding.navView)
-            } else {
-                binding.drawerLayout.openDrawer(binding.navView)
+            with(binding.drawerLayout) {
+                if (isDrawerOpen(binding.navView)) closeDrawer(binding.navView) else openDrawer(binding.navView)
             }
         }
 
@@ -99,6 +114,7 @@ class MainActivity : AppCompatActivity(), ChatFragment.ChatFragmentCallback {
 
     private fun setupRecyclerView() {
         chatAdapter = ChatAdapter(messageList)
+        Log.d("MainActivity", "RecyclerView updated with ${messageList.size} messages")
         binding.recyclerView.apply {
             layoutManager = LinearLayoutManager(this@MainActivity)
             adapter = chatAdapter
@@ -107,6 +123,10 @@ class MainActivity : AppCompatActivity(), ChatFragment.ChatFragmentCallback {
 
     private fun setupNavigationView() {
         val chatPreviewAdapter = ChatPreviewAdapter(chatPreview, lifecycleScope, messageDao) { chatId ->
+            Log.d("ChatPreview", "Chat clicked: $chatId")
+            currentChatId = chatId
+            saveCurrentChatId(chatId)
+            Log.d("MainActivity", "Updated currentChatId: $currentChatId")
             loadChatMessagesByChatId(chatId)
             binding.drawerLayout.closeDrawer(binding.navView)
         }
@@ -119,64 +139,52 @@ class MainActivity : AppCompatActivity(), ChatFragment.ChatFragmentCallback {
     }
 
     private fun loadChatPreviews() {
-        lifecycleScope.launch {
-            val previews = withContext(Dispatchers.IO) {
-                messageDao.getAllMessages()
-            }
-
+        messageDao.getAllMessages().observe(this) { previews ->
             val existingPreviews = mutableSetOf<Pair<Long, Int>>()
 
             val previewList = previews.groupBy { it.chatId }.mapNotNull {
                 val previewMessage = it.value.first()
                 val chatId = it.key
                 val counter = previewMessage.counter
-                Log.d("MainActivity", "Loaded preview for chatId: ${it.key} with counter: ${previewMessage.counter}, text: ${previewMessage.text}")
 
                 if (existingPreviews.contains(Pair(chatId, counter))) {
-                    Log.d("MainActivity", "Skipping duplicate preview for chatId: $chatId with counter: $counter")
                     return@mapNotNull null
                 } else {
                     existingPreviews.add(Pair(chatId, counter))
-
-                    Log.d("MainActivity", "Adding preview for chatId: $chatId with counter: $counter, text: ${previewMessage.text}")
-
+                    MessageData(
+                        text = previewMessage.text,
+                        isSent = previewMessage.isSent,
+                        chatId = chatId,
+                        timestamp = previewMessage.timestamp,
+                        counter = counter
+                    )
                 }
-                MessageData(
-                    text = previewMessage.text,
-                    isSent = previewMessage.isSent,
-                    chatId = chatId,
-                    timestamp = previewMessage.timestamp,
-                    counter = counter
-                )
             }
+
             (binding.navView.findViewById<RecyclerView>(R.id.recyclerViewPreview).adapter as ChatPreviewAdapter).updateData(previewList)
         }
     }
 
     private fun startNewChat() {
-        lifecycleScope.launch {
-            chatCounter = withContext(Dispatchers.IO) {
-                messageDao.getMaxCounterForChat(currentChatId) + 1
-            }
-            Log.d("counter in startnewchat", "startNewChat: $chatCounter & $currentChatId")
-        }
-        messageList.clear()
-        chatAdapter.notifyDataSetChanged()
         currentChatId = System.currentTimeMillis()
+        chatCounter = 1
+        messageList.clear()
+        saveCurrentChatId(currentChatId)
+        binding.recyclerView.scrollToPosition(0)
     }
 
     private fun sendMessage(messageText: String) {
-        val newMessage = MessageData(messageText, true, currentChatId, timestamp = System.currentTimeMillis(), chatCounter)
-        messageList.add(newMessage)
-        chatAdapter.notifyItemInserted(messageList.size - 1)
-        binding.recyclerView.scrollToPosition(messageList.size - 1)
-
-        lifecycleScope.launch(Dispatchers.IO) {
-            messageDao.insertMessage(newMessage)
-            Log.d("counter in sendmessage", "sendMessage: $chatCounter & $currentChatId")
+        if (!NetworkUtil.isInternetAvailable(this)) {
+            NetworkUtil.showNoInternetDialog(this)
+            return
         }
 
-        loadChatPreviews()
+        val newMessage = MessageData(messageText, true, currentChatId, timestamp = System.currentTimeMillis(), chatCounter)
+        messageList.add(newMessage)
+        chatAdapter.notifyItemInserted(messageList.lastIndex)
+        binding.recyclerView.scrollToPosition(messageList.lastIndex)
+        lifecycleScope.launch(Dispatchers.IO) { messageDao.insertMessage(newMessage) }
+        chatCounter++
     }
 
     private fun receiveMessage(response: String) {
@@ -185,44 +193,41 @@ class MainActivity : AppCompatActivity(), ChatFragment.ChatFragmentCallback {
 
         val receivedMessage = MessageData(botResponse, false, currentChatId, timestamp = System.currentTimeMillis(), chatCounter)
         messageList.add(receivedMessage)
-        chatAdapter.notifyItemInserted(messageList.size -1)
-        binding.recyclerView.scrollToPosition(messageList.size -1)
+        chatAdapter.notifyItemInserted(messageList.size - 1)
+        binding.recyclerView.scrollToPosition(messageList.size - 1)
 
         lifecycleScope.launch(Dispatchers.IO) {
             messageDao.insertMessage(receivedMessage)
-            Log.d("counter in receiveMessage", "receiveMessage: $chatCounter & $currentChatId")
+            Log.d(
+                "MainActivity",
+                "Received message for chatId: $currentChatId with counter: $chatCounter"
+            )
         }
-
-        loadChatPreviews()
     }
 
     private fun loadMessagesFromDatabase() {
         lifecycleScope.launch {
             val messages = withContext(Dispatchers.IO) { messageDao.getMessageByChatId(currentChatId) }
             messageList.addAll(messages)
-            chatAdapter.notifyDataSetChanged()
-            binding.recyclerView.scrollToPosition(messageList.size -1)
+            binding.recyclerView.scrollToPosition(messageList.size - 1)
         }
     }
 
     private fun loadChatMessagesByChatId(chatId: Long) {
-        messageList.clear()
-
         lifecycleScope.launch {
-            val messages = withContext(Dispatchers.IO) {
-                messageDao.getMessageByChatId(chatId)
-            }
-            messageList.addAll(messages)
-
-            if (messages.isNotEmpty()) {
-                chatCounter = messages.first().counter
-            }
-
-            Log.d("counter in loadChatMessagesByChatId", "loadChatMessagesByChatId: $chatCounter & $chatId")
-
+            messageList.clear()
             chatAdapter.notifyDataSetChanged()
-            binding.recyclerView.scrollToPosition(messageList.size -1)
+            val messages = withContext(Dispatchers.IO) { messageDao.getMessageByChatId(chatId) }
+            Log.d("MainActivity", "Loaded messages: ${messages.size}")
+            messageList.addAll(messages)
+            chatCounter = (messages.lastOrNull()?.counter ?: 0) + 1
+            chatAdapter.notifyDataSetChanged()
+            binding.recyclerView.scrollToPosition(messageList.size - 1)
         }
+    }
+
+    private fun saveCurrentChatId(chatId: Long) {
+        getSharedPreferences("ChatPrefs", MODE_PRIVATE).edit { putLong("currentChatId", chatId) }
     }
 
     override fun onLoadChatMessagesByChatId(chatId: Long) {

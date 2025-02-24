@@ -10,57 +10,72 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.TextView
+import android.widget.Toast
 import androidx.appcompat.widget.SearchView
-import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import org.sabda.family.DetailActivity
 import org.sabda.family.R
+import org.sabda.family.ResourcesActivity
 import org.sabda.family.adapter.FamilyAdapter
+import org.sabda.family.base.BaseFragment
 import org.sabda.family.data.repository.FamilyRepository
 import org.sabda.family.data.viewmodel.SharedViewModel
 import org.sabda.family.databinding.FragmentResourcesBinding
 import org.sabda.family.model.FamilyData
 import org.sabda.family.utility.LoadingUtil
 import org.sabda.family.utility.MenuUtil
+import org.sabda.family.utility.NetworkUtil
 
-class ResourcesFragment : Fragment() {
+class ResourcesFragment : BaseFragment<FragmentResourcesBinding>() {
 
-    private lateinit var binding: FragmentResourcesBinding
     private lateinit var familyAdapter: FamilyAdapter
     private val familyList = mutableListOf<FamilyData>()
-    private val familyRepository = FamilyRepository()
+    private val familyRepository by lazy { FamilyRepository(requireContext()) }
     private val sharedViewModel: SharedViewModel by activityViewModels()
 
     private var isFilterApplied = false
 
+    private lateinit var noResultsText: TextView
     private lateinit var loadingTextView: TextView
     private val loadingUtil = LoadingUtil()
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
-        binding = FragmentResourcesBinding.inflate(inflater, container, false)
+    private val isNightMode: Boolean
+        get() = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
 
-        setupRecyclerView()
-        setupLoadingTextView()
-        fetchFamilyData()
-        setupButtons()
-        setupSearchView()
+    override fun inflateBinding(inflater: LayoutInflater, container: ViewGroup?) =
+        FragmentResourcesBinding.inflate(inflater, container, false)
 
-        return binding.root
+    override fun onViewCreated( view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        checkInternetAndProceed {
+            setupRecyclerView()
+            setupNoResultsText()
+            setupLoadingTextView()
+            fetchFamilyData()
+            setupButtons()
+            setupSearchView()
+        }
+
     }
 
+    private fun checkInternetAndProceed(action: () -> Unit) {
+        if (NetworkUtil.isInternetAvailable(requireContext())) {
+            action()
+        } else {
+            NetworkUtil.showNoInternetDialog(requireContext())
+        }
+    }
 
     private fun setupRecyclerView() {
-        familyAdapter = FamilyAdapter(familyList) { familyId ->
-            val intent = Intent(context, DetailActivity::class.java).apply {
+        familyAdapter = FamilyAdapter { familyId ->
+            val intent = Intent(context, ResourcesActivity::class.java).apply {
                 putExtra("familyId", familyId)
+                Log.d("checkfamilyid", "setupRecyclerView: $familyId ")
             }
             startActivity(intent)
         }
@@ -75,7 +90,6 @@ class ResourcesFragment : Fragment() {
             loadingTextView = TextView(context).apply {
                 textSize = 18f
 
-                val isNightMode = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
                 setTextColor(
                     if (isNightMode) resources.getColor(android.R.color.white, null)
                     else resources.getColor(android.R.color.black, null)
@@ -94,25 +108,38 @@ class ResourcesFragment : Fragment() {
         loadingTextView.visibility = View.GONE
     }
 
+    private fun setupNoResultsText() {
+        noResultsText = TextView(context).apply {
+            text = getString(R.string.no_results)
+            textSize = 18f
+            setTextColor(resources.getColor(android.R.color.black, null))
+            textAlignment = View.TEXT_ALIGNMENT_CENTER
+            layoutParams = FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.WRAP_CONTENT,
+                FrameLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                gravity = Gravity.CENTER
+
+            }
+            visibility = View.GONE
+        }
+
+        (binding.root as ViewGroup).addView(noResultsText)
+    }
+
     private fun fetchFamilyData() {
-        if (sharedViewModel.hasFamilyData()) {
-            familyList.clear()
-            familyList.addAll(sharedViewModel.familyData.value!!)
-            familyAdapter.updateData(familyList)
-            familyAdapter.notifyDataSetChanged()
-            return
-        } else {
+        checkInternetAndProceed {
             showLoading()
-            lifecycleScope.launch {
+            viewLifecycleOwner.lifecycleScope.launch {
                 try {
                     val familyDataList = withContext(Dispatchers.IO) {
-                        familyRepository.fetchFamilyData()
+                        familyRepository.fetchFamilyData(fragmentName = "ResourcesFragment")
                     }
-                    sharedViewModel.setFamilyData(familyDataList)
+                    sharedViewModel.setResourcesFamilyData(familyList)
                     familyList.clear()
-                    familyList.addAll(familyDataList)
+                    familyList.addAll(familyDataList.shuffled())
+
                     familyAdapter.updateData(familyList)
-                    familyAdapter.notifyDataSetChanged()
                 } catch (e: Exception) {
                     Log.e("List_Data", "Error fetching family data", e)
                 } finally {
@@ -130,7 +157,12 @@ class ResourcesFragment : Fragment() {
         if (isFilterApplied) {
             clearFilter()
         } else {
-            context?.let { MenuUtil(it).setupFilterMenu(binding.filterImage, this) }
+            context?.let { context ->
+                MenuUtil(context).setupFilterMenu(binding.filterImage, this) {
+                    isFilterApplied = false // Reset status filter saat menu ditutup
+                    updateFilterButton() // Perbarui ikon filter
+                }
+            }
             isFilterApplied = true
             updateFilterButton()
         }
@@ -159,7 +191,7 @@ class ResourcesFragment : Fragment() {
         lifecycleScope.launch {
             try {
                 val filteredData = withContext(Dispatchers.IO) {
-                    familyRepository.fetchFilteredFamilyData(itemTitle, query)
+                    familyRepository.fetchFamilyData(itemTitle = itemTitle, query =  query)
                 }
                 familyAdapter.updateData(filteredData)
             } catch (e: Exception) { Log.e("ListDataActivity", "Error applying filter", e) }
@@ -169,9 +201,7 @@ class ResourcesFragment : Fragment() {
     // Pengaturan SearchView
     private fun setupSearchView() {
         binding.searchView.setOnQueryTextListener(object : SearchView.OnQueryTextListener{
-            override fun onQueryTextSubmit(query: String?): Boolean {
-                return false
-            }
+            override fun onQueryTextSubmit(query: String?): Boolean = false
 
             override fun onQueryTextChange(newText: String?): Boolean {
                 newText?.let { filterFamilyList(it) }
@@ -183,14 +213,23 @@ class ResourcesFragment : Fragment() {
     // Pengaturan Searchview untuk parameternya
     private fun filterFamilyList(query: String) {
         val filteredList = familyList.filter {
-            it.title.contains(query, ignoreCase = true) ||
-                    it.description.contains(query, ignoreCase = true) ||
-                    it.author.contains(query, ignoreCase = true)
+            it.title.contains(query, ignoreCase = true)
         }
+
+        if (filteredList.isEmpty()) {
+            noResultsText.visibility = View.VISIBLE
+            binding.recyclerView2.visibility = View.GONE
+        } else {
+            noResultsText.visibility = View.GONE
+            binding.recyclerView2.visibility = View.VISIBLE
+        }
+
         familyAdapter.updateData(filteredList)
+
     }
 
     private fun setViewsVisibility(visibility: Int) {
+        if (!isAdded) return
         binding.apply {
             recyclerView2.visibility = visibility
             filterImage.visibility = visibility
@@ -199,12 +238,16 @@ class ResourcesFragment : Fragment() {
     }
 
     private fun showLoading() {
-        loadingUtil.showLoadingWebView(loadingTextView)
+        if (!isAdded) return
+        loadingUtil.showLoadingView(loadingTextView)
         setViewsVisibility(View.GONE)
     }
 
     private fun hideLoading() {
-        loadingUtil.hideLoadingWebView(loadingTextView)
+        if (!isAdded) return
+        loadingUtil.hideLoadingView(loadingTextView)
         setViewsVisibility(View.VISIBLE)
     }
 }
+
+

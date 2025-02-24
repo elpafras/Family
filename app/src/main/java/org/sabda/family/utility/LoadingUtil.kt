@@ -11,24 +11,21 @@ class LoadingUtil {
 
     private val handler = Handler(Looper.getMainLooper())
     private var loadingIndex: Int = -1
+    private val loadingMessages = arrayOf("Loading.", "Loading..", "Loading...")
 
     fun showLoadingMessage(chatAdapter: ChatAdapter, messageList: MutableList<MessageData>, chatId: Long) {
-        val loading = arrayOf("Loading.", "Loading..", "Loading...")
-        handler.post(object : Runnable {
-            var index = 0
-            override fun run() {
+        startLoadingAnimation(
+            onUpdate = { index ->
                 if (loadingIndex == -1) {
-                    messageList.add(MessageData(loading[index], false, chatId, System.currentTimeMillis(), 0))
+                    messageList.add( MessageData(loadingMessages[index], false, chatId, System.currentTimeMillis(), 0 ) )
                     loadingIndex = messageList.size - 1
                     chatAdapter.notifyItemInserted(loadingIndex)
                 } else {
-                    messageList[loadingIndex].text = loading[index]
+                    messageList[loadingIndex].text = loadingMessages[index]
                     chatAdapter.notifyItemChanged(loadingIndex)
                 }
-                index = (index + 1) % loading.size
-                handler.postDelayed(this, 500)
             }
-        })
+        )
     }
 
     fun hideLoadingMessage(chatAdapter: ChatAdapter, messageList: MutableList<MessageData>) {
@@ -37,26 +34,35 @@ class LoadingUtil {
             chatAdapter.notifyItemRemoved(loadingIndex)
             loadingIndex = -1
         }
-        handler.removeCallbacksAndMessages(null)
+        stopLoadingAnimation()
     }
 
-    fun showLoadingWebView(loadingTextView: View) {
-        val loadingMessages = arrayOf("Loading.", "Loading..", "Loading...")
-        loadingTextView.visibility = View.VISIBLE
+    fun showLoadingView(loadingTextView: View) {
+        if (loadingTextView is TextView) {
+            loadingTextView.visibility = View.VISIBLE
+            startLoadingAnimation(
+                onUpdate = { index -> loadingTextView.text = loadingMessages[index] }
+            )
+        }
+    }
+
+    fun hideLoadingView(loadingTextView: View) {
+        loadingTextView.visibility = View.GONE
+        stopLoadingAnimation()
+    }
+
+    private fun startLoadingAnimation(onUpdate: (index: Int) -> Unit) {
         handler.post(object : Runnable {
             var index = 0
             override fun run() {
-                if (loadingTextView is TextView) {
-                    loadingTextView.text = loadingMessages[index]
-                }
+                onUpdate(index)
                 index = (index + 1) % loadingMessages.size
                 handler.postDelayed(this, 500)
             }
         })
     }
 
-    fun hideLoadingWebView(loadingTextView: View) {
-        loadingTextView.visibility = View.GONE
+    private fun stopLoadingAnimation() {
         handler.removeCallbacksAndMessages(null)
     }
 }

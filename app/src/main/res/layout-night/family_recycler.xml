@@ -44,7 +44,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Baca Selengkapnya >>"
-            android:textColor="@color/blue"
+            android:textColor="@color/yellow"
             android:layout_below="@id/shortTextView"
             android:layout_marginStart="10dp"
             android:layout_marginEnd="10dp"/>

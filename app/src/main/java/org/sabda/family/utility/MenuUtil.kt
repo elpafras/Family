@@ -20,72 +20,78 @@ import java.net.URL
 
 class MenuUtil(private val context: Context) {
 
-    private lateinit var popupMenu: PopupMenu
-
     fun setupMenu(view: View, currentActivity: String) {
-        popupMenu = PopupMenu(context, view)
-        popupMenu.inflate(R.menu.menu_option)
-
-        when (currentActivity) {
-            "AboutActivity" -> popupMenu.menu.findItem(R.id.about).isVisible = false
-        }
-
-        popupMenu.setOnMenuItemClickListener { item ->
-            handleMenuSelection(item)
-            true
-        }
-
-        popupMenu.show()
-    }
-
-    private fun handleMenuSelection(menuItem: MenuItem) {
-        when (menuItem.itemId) {
-            R.id.about -> context.startActivity(Intent(context, AboutActivity::class.java))
-        }
-    }
-
-    fun setupFilterMenu(view: View, fragment: Fragment) {
-        val popupMenu = PopupMenu(context, view)
-        popupMenu.inflate(R.menu.filter_menu)
-
-        popupMenu.setOnMenuItemClickListener { item ->
-            when (item.itemId) {
-                R.id.category   -> fetchAndPopulateFilterMenu("categories", view, fragment)
-                R.id.series     -> fetchAndPopulateFilterMenu("series", view, fragment)
-                R.id.media      -> fetchAndPopulateFilterMenu("media_type", view, fragment)
+        createPopMenu(view, R.menu.menu_option).apply {
+            if (currentActivity == "AboutActivity") {
+                menu.findItem(R.id.about).isVisible = false
             }
-            true
+            setOnMenuItemClickListener { handleMenuSelection(it) }
+            show()
         }
+    }
 
-        popupMenu.show()
+    fun setupFilterMenu(view: View, fragment: Fragment, onCloseMenu: () -> Unit = {}) {
+        createPopMenu(view, R.menu.filter_menu).apply {
+            setOnMenuItemClickListener { item ->
+                when (item.itemId) {
+                    R.id.category -> fetchAndPopulateFilterMenu("categories", view, fragment)
+                    R.id.series -> fetchAndPopulateFilterMenu("series", view, fragment)
+                    R.id.media -> fetchAndPopulateFilterMenu("media_type", view, fragment)
+                }
+                true
+            }
+            setOnDismissListener { onCloseMenu() }
+            show()
+        }
+    }
+
+    private fun createPopMenu(anchor: View, menuRes: Int): PopupMenu {
+        return PopupMenu(context, anchor).apply {
+            inflate(menuRes)
+        }
+    }
+
+    private fun handleMenuSelection(menuItem: MenuItem): Boolean {
+        return when (menuItem.itemId) {
+            R.id.about -> {
+                context.startActivity(Intent(context, AboutActivity::class.java))
+                true
+            }
+            else -> false
+        }
     }
 
     private fun fetchAndPopulateFilterMenu(query: String, view: View, fragment: Fragment) {
-        val apiUrl = "https://dev.sabda.org/unhack/2024/api/family/getTaxonomies.php?q=$query"
-        val url = URL(apiUrl)
-
+        val apiUrl = context.getString(R.string.populate_url, query)
         Thread {
-            var connection: HttpURLConnection? = null
-            try {
-                connection = url.openConnection() as HttpURLConnection
-                connection.requestMethod = "GET"
-
-                val responseCode = connection.responseCode
-                if (responseCode == HttpURLConnection.HTTP_OK) {
-                    val reader = BufferedReader(InputStreamReader(connection.inputStream))
-                    val response = reader.use { it.readText() }
-                    val options = parseOptions(response)
-
-                    (context as? Activity)?.runOnUiThread { showFilterMenu(options, view, query, fragment) }
-
-                }
-            } catch (e: Exception) {
-                Log.e("MenuUtil", "Error fetching data ", e)
-                Toast.makeText(context, "Error fetching data", Toast.LENGTH_SHORT).show()
-            } finally {
-                connection?.disconnect()
+            val options = fetchDataFromApi(apiUrl)
+            (context as? Activity)?.runOnUiThread {
+                showFilterMenu(options, view, query, fragment)
             }
         }.start()
+    }
+
+    private fun fetchDataFromApi(apiUrl: String): List<String> {
+        var connection: HttpURLConnection? = null
+        return try {
+            connection = (URL(apiUrl).openConnection() as HttpURLConnection).apply {
+                requestMethod = "GET"
+            }
+            if (connection.responseCode == HttpURLConnection.HTTP_OK) {
+                BufferedReader(InputStreamReader(connection.inputStream)).use { reader ->
+                    parseOptions(reader.readText())
+                }
+            } else {
+                showError("Failed to fetch data")
+                emptyList()
+            }
+        } catch (e: Exception) {
+            Log.e("MenuUtil", "Error fetching data", e)
+            showError("Error fetching data")
+            emptyList()
+        } finally {
+            connection?.disconnect()
+        }
     }
 
     private fun parseOptions(data: String): List<String> {
@@ -122,5 +128,9 @@ class MenuUtil(private val context: Context) {
         }
 
         filterPopUpMenu.show()
+    }
+
+    private fun showError(message: String) {
+        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
     }
 }

@@ -1,83 +1,121 @@
 package org.sabda.family
 
+import android.content.res.Configuration
 import android.graphics.Bitmap
 import android.os.Bundle
 import android.util.Log
-import android.view.Gravity
 import android.view.View
-import android.view.ViewGroup
+import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import android.widget.FrameLayout
-import android.widget.ImageView
+import android.widget.RelativeLayout
 import android.widget.TextView
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
+import android.widget.Toast
+import org.sabda.family.base.BaseActivity
+import org.sabda.family.databinding.ActivityDetailBinding
 import org.sabda.family.utility.LoadingUtil
+import org.sabda.family.utility.NetworkUtil
 import org.sabda.family.utility.StatusBarUtil
 
-class DetailActivity : AppCompatActivity() {
+class DetailActivity : BaseActivity<ActivityDetailBinding>() {
 
-    private lateinit var backButton: ImageView
-    private lateinit var webView: WebView
+    override fun setupViewBinding(): ActivityDetailBinding {
+        return ActivityDetailBinding.inflate(layoutInflater)
+    }
+
     private lateinit var loadingTextView: TextView
-    private lateinit var loadingUtil: LoadingUtil
+    private val loadingUtil = LoadingUtil()
+
+    private val isNightMode: Boolean
+        get() = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+
+    private var homeUrl: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_detail)
 
         StatusBarUtil().setLightStatusBar(this, R.color.white)
-        initView()
         setupButtons()
-        setupWebView()
+
+        checkInternetAndProceed {
+            initView()
+            setupWebView()
+        }
+
     }
 
-    private fun initView() {
-        backButton      = findViewById(R.id.back)
-        webView         = findViewById(R.id.webView)
-        loadingUtil     = LoadingUtil()
-        loadingTextView = TextView(this).apply {
-            text = R.string.loading.toString()
-            textSize = 18f
-            setTextColor(ContextCompat.getColor(this@DetailActivity, android.R.color.black))
-            gravity = Gravity.CENTER
-            layoutParams = FrameLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT).apply { visibility = View.GONE }
+    private fun checkInternetAndProceed(action: () -> Unit) {
+        if (NetworkUtil.isInternetAvailable(this)) {
+            action()
+        } else {
+            NetworkUtil.showNoInternetDialog(this)
         }
     }
 
+    private fun initView() {
+        loadingTextView = TextView(this).apply {
+            textSize = 18f
+            setTextColor(
+                if (isNightMode) resources.getColor(android.R.color.white, null)
+                else resources.getColor(android.R.color.black, null)
+            )
+            textAlignment = View.TEXT_ALIGNMENT_CENTER
+            layoutParams = RelativeLayout.LayoutParams(
+                RelativeLayout.LayoutParams.WRAP_CONTENT,
+                RelativeLayout.LayoutParams.WRAP_CONTENT
+            ).apply {
+                addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE)
+            }
+        }
+        binding.root.addView(loadingTextView)
+        loadingTextView.visibility = View.GONE
+    }
+
     private fun setupButtons() {
-        backButton.setOnClickListener { finish() }
+        binding.back.setOnClickListener { finish() }
     }
 
     private fun setupWebView(){
+        val webView = binding.webView
+
+        webView.settings.apply {
+            javaScriptEnabled = true
+            domStorageEnabled = true
+            cacheMode = WebSettings.LOAD_NO_CACHE
+
+            allowFileAccess = false
+            allowContentAccess = false
+        }
+
         webView.webViewClient = object : WebViewClient() {
+
+
             override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
                 super.onPageStarted(view, url, favicon)
-                loadingUtil.showLoadingWebView(loadingTextView)
+                loadingUtil.showLoadingView(loadingTextView)
             }
 
             override fun onPageFinished(view: WebView?, url: String?) {
                 super.onPageFinished(view, url)
-                loadingUtil.hideLoadingWebView(loadingTextView)
+                loadingUtil.hideLoadingView(loadingTextView)
             }
         }
 
-        val familyId = intent.getStringExtra("familyId")
-        var extraText = intent.getStringExtra("Extra_Text")
+        val sourceUrl = intent.getStringExtra("sourceUrl")
 
-        extraText = extraText?.replace(Regex("Bacaan:\\s*"), "")
-
-        Log.d("cek XTRA", "setupWebView: $extraText")
-
-        val url = if (!familyId.isNullOrEmpty()){
-            "https://family.sabda.org/m-detail.php?id=$familyId"
-        } else if (!extraText.isNullOrEmpty()) {
-            "https://alkitab.sabda.org/?$extraText"
-        } else {
-            throw IllegalArgumentException("Tidak ada data yang valid untuk menampilkan halaman.")
+        if (sourceUrl.isNullOrEmpty()) {
+            Toast.makeText(this, "URL tidak ditemukan", Toast.LENGTH_SHORT).show()
+            Log.e("DetailActivity", "sourceUrl kosong atau null")
+            finish() // Tutup activity jika tidak ada URL
+            return
         }
 
-        webView.loadUrl(url)
+        homeUrl = sourceUrl
+        Log.d("DetailActivity", "Memuat URL: $sourceUrl")
+        webView.loadUrl(sourceUrl)
+        webView.clearCache(true)
+        webView.clearHistory()
     }
+
+
 }

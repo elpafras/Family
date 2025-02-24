@@ -8,36 +8,30 @@ import androidx.recyclerview.widget.RecyclerView
 import org.sabda.family.model.FamilyData
 import org.sabda.family.R
 
-class FamilyAdapter (private val onClick: (String) -> Unit) : RecyclerView.Adapter<FamilyAdapter.ViewHolder>() {
+class FamilyPagerAdapter(private var familyData: List<FamilyData>, private val onClick: (String) -> Unit ) : RecyclerView.Adapter<FamilyPagerAdapter.ViewHolder>() {
 
-    private val familyData: MutableList<FamilyData> = mutableListOf()
-
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int ): ViewHolder {
         val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.family_recycler, parent, false)
-
         return ViewHolder(view)
     }
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        holder.bind(familyData[position])
+        val familyData = familyData[position]
+        holder.bind(familyData)
     }
 
     override fun getItemCount(): Int = familyData.size
 
-    fun updateData(newFamilyList: List<FamilyData>) {
-        familyData.clear()
-        familyData.addAll(newFamilyList)
-        notifyDataSetChanged()
-    }
+    fun updateData(newFamilylist: List<FamilyData>) { familyData = newFamilylist }
 
-    inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+    inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView){
         fun bind(familyDatas: FamilyData) {
             val titleTextView = itemView.findViewById<TextView>(R.id.titleTextView)
-            titleTextView.text = trimText(familyDatas.title, 45, 80)
+            titleTextView.text = trimText(familyDatas.title, 45, 70)
 
             val shortTextView = itemView.findViewById<TextView>(R.id.shortTextView)
-            shortTextView.text = trimText(familyDatas.short, 40, 70)
+            shortTextView.text = trimText(familyDatas.short, 40, 65)
 
             val seriesTextView = itemView.findViewById<TextView>(R.id.seriesTextView)
             seriesTextView.text = formatSeries(familyDatas.series)
